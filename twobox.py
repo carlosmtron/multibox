@@ -84,7 +84,7 @@ for jj in range(num_k):
     sigmas[jj,3] = sigma_a(ta)
     sigmas[jj,4] = NEE(ta, tb)
 
-
+# Grafico los para t infinito T, \sigma_{AB} y F_{AB} en función de k_{AB}
 fig, axs = plt.subplots(3, sharex=True, sharey=False)
 
 axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1])
@@ -104,5 +104,5 @@ axs[2].set_ylabel('$F_{AB}$ [W m$^{-2}$]')
 axs[2].grid(True)
 
 plt.xscale('log')
-plt.xlabel('$k_{AB}$')
+plt.xlabel('$k_{AB}$ [W m$^{-2}$K$^{-1}$]')
 plt.show()
