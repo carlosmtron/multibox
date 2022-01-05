@@ -1,4 +1,8 @@
 # maximize.py
+#
+# Cálculo de las temperaturas que maximizan la producción de entropía
+# para un Flujo meridional F constante en el problema de dos cajas.
+#
 # Autor Carlos M. Silva
 
 import numpy as np

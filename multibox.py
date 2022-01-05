@@ -33,7 +33,7 @@ print("Latitud Media \t Albedo \t SWA [W/m²]")
 
 fluxes = np.zeros((nboxes,5))
 divisiones = np.arange(0,nboxes)
-T_inicial = 200      # Kelvin
+T_inicial = 400      # Kelvin
 for ii in divisiones:
     lat = albedo_vs_latitud[ii,0]  # Se los paso en grados
     albedo = albedo_vs_latitud[ii,1]
@@ -55,12 +55,12 @@ def sigma(fluxes):
     return suma
 """
 
-def sigmaT(fluxes):
+def sigmaT(vtemp):
     suma = 0
     nboxes = fluxes.shape[0]
     for ii in np.arange(0,nboxes):
-        suma += (fluxes[ii,1] - fluxes[ii,2]) / fluxes[ii,4]
-    return suma
+        suma += (fluxes[ii,1] - LWA(vtemp[ii])) / vtemp[ii]
+    return -suma
 
 
 # print(sigmaT(fluxes))
@@ -70,6 +70,12 @@ with np.printoptions(precision=3, suppress=True):
     print(fluxes)
 
 
+from scipy.optimize import minimize
 
+# Semilla
+semilla = fluxes[:,4]
 
-    
+    # Optimización
+solucion =  minimize(sigmaT,semilla,method='nelder-mead', options={'maxiter': 1200, 'xatol': 0.0001, 'return_all': True, 'disp': True})
+
+print(solucion.x)
