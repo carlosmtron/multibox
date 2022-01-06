@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-from math import pi
 import numpy as np
+from scipy.optimize import minimize
 import SWA
+
 
 ###########################
 # Constantes del problema #
@@ -73,7 +74,7 @@ with np.printoptions(precision=3, suppress=True):
     print(fluxes)
 
 
-from scipy.optimize import minimize
+
 
 # Semilla
 semilla = fluxes[:,4]
