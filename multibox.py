@@ -23,7 +23,7 @@ def LWA(T):
 albedo_vs_latitud = np.loadtxt('latitudes.dat')
 nboxes = albedo_vs_latitud.shape[0]  # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
-print("Latitud Media \t Albedo \t SWA [W/m²]")
+
 
 # Creo la matriz 'fluxes', de 'nboxes' filas, cuyas columnas son:
 # lat, SWA, LWA, Fi, temp
@@ -34,6 +34,9 @@ print("Latitud Media \t Albedo \t SWA [W/m²]")
 fluxes = np.zeros((nboxes,5))
 divisiones = np.arange(0,nboxes)
 T_inicial = 400      # Kelvin
+
+print("Latitud Media \t Albedo \t SWA [W/m²]")
+
 for ii in divisiones:
     lat = albedo_vs_latitud[ii,0]  # Se los paso en grados
     albedo = albedo_vs_latitud[ii,1]
