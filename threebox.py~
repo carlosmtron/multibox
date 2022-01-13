@@ -35,7 +35,6 @@ print("Se han detectado ", nboxes, " cajas\n")
 dcajas = np.zeros((nboxes,4))
 divisiones = np.arange(0,nboxes)
 T_inicial = 400      # Kelvin
-flujos = np.zeros((nboxes))
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
 
@@ -45,9 +44,9 @@ for ii in divisiones:
     dcajas[ii,:] = [lat, SWA.SWA_calc(lat, albedo), LWA(T_inicial), T_inicial]
     
     print(f"{lat:^+13.2f} \t {albedo:^6.2f} \t {dcajas[ii,1]:^10.4f}")
-    
-    
+
 def calculo_flujos(vtemp):
+    flujos = np.zeros((nboxes))
     flujos[0] = (dcajas[0,1] - LWA(vtemp[0]))*area
     for jj in np.arange(1,nboxes-1):
         flujos[jj] = (dcajas[jj,1] - LWA(vtemp[jj]))*area + flujos[jj-1]
