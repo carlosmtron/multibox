@@ -28,23 +28,28 @@ print("Se han detectado ", nboxes, " cajas\n")
 
 # Creo la matriz 'fluxes', de 'nboxes' filas, cuyas columnas son:
 # lat, SWA, LWA, temp
-# La distribución de temperatura inicial será uniforme, de 400 K 
+
 
 
 dcajas = np.zeros((nboxes,4))
-divisiones = np.arange(0,nboxes)
-T_inicial = 300      # Kelvin
 flujos = np.zeros((nboxes+1))
+
+divisiones = np.arange(0,nboxes)
+
+# Defino las temperaturas iniciales. Al ser tres cajas lo puedo hacer manualmente.
+dcajas[:,3] = [280, 280, 280]  # Kelvin
+
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
 
 for ii in divisiones:
     lat = albedo_vs_latitud[ii,0]  # Se los paso en grados
     albedo = albedo_vs_latitud[ii,1]
-    dcajas[ii,:] = [lat, SWA.SWA_calc(lat, albedo), LWA(T_inicial), T_inicial]
+    dcajas[ii,:3] = [lat, SWA.SWA_calc(lat, albedo), LWA(dcajas[ii,3])]
     
     print(f"{lat:^+13.2f} \t {albedo:^6.2f} \t {dcajas[ii,1]:^10.4f}")
 
+    
     
 def calculo_flujos(vtemp):
     flujos[0] = 0
@@ -63,13 +68,13 @@ def suma_flujos(vtemp):
 def sigmaT(vtemp):
     suma = 0
     factual = calculo_flujos(vtemp)
-    for ii in np.arange(0,nboxes):
+    for ii in divisiones:
         suma += (factual[ii] - factual[ii+1])/vtemp[ii]
     return -suma
 
 
 
-print([["lat", " SWi ", " LWi ", " Ti "]])
+print("\n", [["lat", " SWi ", " LWi ", " Ti "]])
 with np.printoptions(precision=3, suppress=True):
     print(dcajas)
     print("\nFlujos meridionales:")
@@ -83,10 +88,9 @@ cons = ({'type': 'eq', 'fun': suma_flujos})
 # Semilla
 semilla = dcajas[:,3]
 
-bnds=[(3, None) for i in range(nboxes)]
+bnds=[(200, 400) for i in range(nboxes)]
 
 # Optimización
-# solucion =  minimize(sigmaT,semilla,method='nelder-mead', options={'maxiter': 1200, 'xatol': 0.0001, 'return_all': True, 'disp': True})
 
 solucion = minimize(sigmaT, semilla, method='SLSQP', bounds=bnds, constraints=cons, options={'maxiter': 1200, 'disp': True})
 
