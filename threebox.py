@@ -37,7 +37,7 @@ flujos = np.zeros((nboxes+1))
 divisiones = np.arange(0,nboxes)
 
 # Defino las temperaturas iniciales. Al ser tres cajas lo puedo hacer manualmente.
-dcajas[:,3] = [280, 280, 280]  # Kelvin
+dcajas[:,3] = [220, 300, 250]  # Kelvin
 
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
@@ -66,12 +66,21 @@ def suma_flujos(vtemp):
     return sumaf
 
 def sigmaT(vtemp):
+    # La función objetivo es el opuesto de la producción de entropía
     suma = 0
     factual = calculo_flujos(vtemp)
     for ii in divisiones:
         suma += (factual[ii] - factual[ii+1])/vtemp[ii]
     return -suma
 
+def gradiente(t):
+    # Calcula el gradiente de la función objetivo
+    f = calculo_flujos(t)
+    df = np.zeros((3))
+    df[0] = f[1]/t[0]**2 + b*area*(1/t[0] - 1/t[1])
+    df[1] = 1/t[1]**2 * (f[2]-f[1]) + b*area*(1/t[1] - 1/t[2])
+    df[2] = -f[2]/t[2]**2
+    return df
 
 
 print("\n", [["lat", " SWi ", " LWi ", " Ti "]])
@@ -92,7 +101,7 @@ bnds=[(200, 400) for i in range(nboxes)]
 
 # Optimización
 
-solucion = minimize(sigmaT, semilla, method='SLSQP', bounds=bnds, constraints=cons, options={'maxiter': 1200, 'disp': True})
+solucion = minimize(sigmaT, semilla, method='trust-constr', bounds=bnds, constraints=cons, jac=gradiente, options={'maxiter': 1200, 'disp': True})
 
 print("Cálculo de temperaturas:")
 print(solucion)
