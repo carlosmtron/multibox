@@ -25,7 +25,7 @@ nboxes = albedo_vs_latitud.shape[0]  # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
 
 
-# Creo la matriz 'fluxes', de 'nboxes' filas, cuyas columnas son:
+# Creo la matriz 'dcajas', de 'nboxes' filas, cuyas columnas son:
 # lat, SWA, LWA, temp
 
 
