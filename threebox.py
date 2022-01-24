@@ -19,8 +19,7 @@ def LWA(T):
     # Radiación infrarroja que sale al espacio
     return a+b*T
 
-# Voy a leer el archivo "latitudes.dat" cuyas columnas son:
-# latitud y albedo
+# Voy a cargar manualmente latitud y albedo en un array. Cada caja está en una fila.
 albedo_vs_latitud = np.array(([-56.719, 0.4], [0, 0.2], [56.719, 0.41]))
 nboxes = albedo_vs_latitud.shape[0]  # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
@@ -32,12 +31,12 @@ print("Se han detectado ", nboxes, " cajas\n")
 
 
 dcajas = np.zeros((nboxes,4))
-flujos = np.zeros((nboxes+1))
+dseta = np.zeros((nboxes))    # Vector de convergencias
 
 divisiones = np.arange(0,nboxes)
 
 # Defino las temperaturas iniciales. Al ser tres cajas lo puedo hacer manualmente.
-dcajas[:,3] = [220, 300, 250]  # Kelvin
+dcajas[:,3] = [300, 300, 300]  # Kelvin
 
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
@@ -51,63 +50,66 @@ for ii in divisiones:
 
     
     
-def calculo_flujos(vtemp):
-    flujos[0] = 0
-    flujos[nboxes] = 0
-    for i in np.arange(1,nboxes):
-        flujos[i] = (dcajas[i-1,1] - LWA(vtemp[i-1]))*area + flujos[i-1]
-    return flujos
+def calculo_dseta(vtemp):
+    for i in divisiones:
+        dseta[i] = (LWA(vtemp[i]) - dcajas[i,1])*area
+    return dseta
 
-def suma_flujos(vtemp):
+def suma_dseta(vtemp):
     sumaf = 0
-    flujos = calculo_flujos(vtemp)
-    for ii in np.arange(0,flujos.shape[0]):
-        sumaf += flujos[ii]
+    dseta = calculo_dseta(vtemp)
+    for ii in divisiones:
+        sumaf += dseta[ii]
     return sumaf
 
 def sigmaT(vtemp):
-    # La función objetivo es el opuesto de la producción de entropía
+    # La función objetivo a minimizar es el opuesto de la producción de entropía
     suma = 0
-    factual = calculo_flujos(vtemp)
+    factual = calculo_dseta(vtemp)
     for ii in divisiones:
-        suma += (factual[ii] - factual[ii+1])/vtemp[ii]
+        suma += factual[ii]/vtemp[ii]
     return -suma
 
 def gradiente(t):
     # Calcula el gradiente de la función objetivo
-    f = calculo_flujos(t)
-    df = np.zeros((3))
-    df[0] = f[1]/t[0]**2 + b*area*(1/t[0] - 1/t[1])
-    df[1] = 1/t[1]**2 * (f[2]-f[1]) + b*area*(1/t[1] - 1/t[2])
-    df[2] = -f[2]/t[2]**2
-    return df
+    # que es el -grad(sigmaT)
+    f = calculo_dseta(t)
+    df = np.zeros((divisiones.shape[0]))
+    for i in divisiones:
+        df[i] = b*area/t[i]-f[i]/t[i]**2
+    return -df
 
 
 print("\n", [["lat", " SWi ", " LWi ", " Ti "]])
 with np.printoptions(precision=3, suppress=True):
     print(dcajas)
-    print("\nFlujos meridionales:")
-    print(calculo_flujos(dcajas[:,3]))
+    print("\nConvergencias meridionales:")
+    print(calculo_dseta(dcajas[:,3]))
 
 
-print("Suma de flujos = ", suma_flujos(dcajas[:,3]))
+print("Suma de convergencias = ", suma_dseta(dcajas[:,3]))
 
-cons = ({'type': 'eq', 'fun': suma_flujos})
+cons = ({'type': 'eq', 'fun': suma_dseta})
 
 # Semilla
 semilla = dcajas[:,3]
 
-bnds=[(200, 400) for i in range(nboxes)]
+bnds=[(3, 400) for i in range(nboxes)]
 
 # Optimización
+solucion = minimize(sigmaT, semilla, method='SLSQP', bounds=bnds, tol=1e-9,
+            constraints=cons, jac=gradiente, options={'maxiter': 2000, 'disp': True})
 
-solucion = minimize(sigmaT, semilla, method='trust-constr', bounds=bnds, constraints=cons, jac=gradiente, options={'maxiter': 1200, 'disp': True})
 
 print("Cálculo de temperaturas:")
 print(solucion)
 
-print("\nFlujos meridionales:")
-print(calculo_flujos(solucion.x))
+Zfin = calculo_dseta(solucion.x)
+
+print("\nConvergencias meridionales:")
+print(Zfin)
+
+print("Suma de convergencias = ", suma_dseta(solucion.x))
 
 print("\nTemperaturas en ºC:")
 print(solucion.x-273.15)
