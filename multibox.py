@@ -22,7 +22,7 @@ def LWA(T):
 # Voy a leer el archivo "latitudes.dat" cuyas columnas son:
 # latitud y albedo
 albedo_vs_latitud = np.loadtxt('latitudes.dat')
-nboxes = albedo_vs_latitud.shape[0]  # Número de cajas
+nboxes = albedo_vs_latitud.shape[0]              # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
 
 
@@ -33,7 +33,7 @@ print("Se han detectado ", nboxes, " cajas\n")
 dcajas = np.zeros((nboxes,4))
 dseta = np.zeros((nboxes))    # Vector de convergencias
 
-divisiones = np.arange(0,nboxes)
+divisiones = np.arange(0,nboxes)  # Grilla de números naturales de 0 a nboxes
 
 # Defino las temperaturas iniciales. Empiezo con T homogénea.
 for i in divisiones:
@@ -75,7 +75,7 @@ def gradiente(t):
     # Calcula el gradiente de la función objetivo
     # que es el -grad(sigmaT)
     f = calculo_dseta(t)
-    df = np.zeros((divisiones.shape[0]))
+    df = np.zeros((nboxes))
     for i in divisiones:
         df[i] = b*area/t[i]-f[i]/t[i]**2
     return -df
