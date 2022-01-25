@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import SWA
 
@@ -116,3 +117,43 @@ print("\nTemperaturas en ºC:")
 print(solucion.x-273.15)
 
 print("\nTemp. promedio:", np.average(solucion.x)-273.15)
+
+############################
+##  Flujos a partir de ζ  ##
+############################
+
+fluxes = np.zeros((nboxes+1))
+fluxes[0] = 0
+fluxes[nboxes] = 0
+latlim = np.loadtxt('latlim.txt')
+for ii in np.arange(1,nboxes):
+    fluxes[ii] =  fluxes[ii-1] - Zfin[ii-1]
+    
+
+
+    
+#################
+##  GRÁFICOS   ##
+#################
+
+
+plt.plot(dcajas[:,0],solucion.x-273.15, marker="o", ls="")
+plt.grid(True, color='0.95')
+plt.title("Distribución de temperaturas")
+plt.xlabel("Latitud [º]")
+plt.ylabel("Temperatura [ºC]")
+plt.show()
+
+plt.plot(dcajas[:,0],Zfin, marker="o", ls="")
+plt.grid(True, color='0.95')
+plt.title("Convergencia de flujos meridionales")
+plt.xlabel("Latitud [º]")
+plt.ylabel("ζ [W/m²]")
+plt.show()
+
+plt.plot(latlim, fluxes, marker="o", ls="")
+plt.grid(True, color='0.95')
+plt.title("Flujo meridional")
+plt.xlabel("Latitud [º]")
+plt.ylabel("F [W/m²]")
+plt.show()
