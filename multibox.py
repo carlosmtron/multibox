@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import SWA
-
+import xarray as xr
 
 ###########################
 # Constantes del problema #
@@ -123,24 +123,16 @@ print(solucion.x-273.15)
 
 print("\nTemp. promedio:", np.average(solucion.x)-273.15)
 
-############################
-##  Flujos a partir de ζ  ##
-############################
-
-fluxes = np.zeros((nboxes+1))
-fluxes[0] = 0
-fluxes[nboxes] = 0
-latlim = np.loadtxt('latlim.txt')
-for ii in np.arange(1, nboxes):
-    fluxes[ii] = fluxes[ii-1] - Zfin[ii-1]
 
 
 #################
 ##  GRÁFICOS   ##
 #################
 
+ticks = [-90, -60, -30, 0, 30, 60, 90]
 
 plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="")
+plt.xticks(ticks)
 plt.grid(True, color='0.95')
 plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [º]")
@@ -153,14 +145,6 @@ plt.title("Convergencia de flujos meridionales")
 plt.xlabel("Latitud [º]")
 plt.ylabel("ζ [W/m²]")
 plt.show()
-
-plt.plot(latlim, fluxes, marker="o", ls="")
-plt.grid(True, color='0.95')
-plt.title("Flujo meridional")
-plt.xlabel("Latitud [º]")
-plt.ylabel("F [W/m²]")
-plt.show()
-
 
 
 #################################################
@@ -201,3 +185,44 @@ def inferred_heat_transport(energy_in, lat=None, latax=None):
         return result_xarray
     else:
         return result
+
+
+data = xr.DataArray(Zfin, dims=("lat"), coords={"lat": dcajas[:, 0]})
+print(data)
+
+flujo_meridional = inferred_heat_transport(data)
+
+print(flujo_meridional)
+
+plt.plot(flujo_meridional.lat,flujo_meridional.values)
+plt.xticks(ticks)
+plt.grid(True, color='0.95')
+plt.title("Flujo meridional")
+plt.xlabel("Latitud [º]")
+plt.ylabel("Flujo meridional [PW]")
+plt.show()
+
+"""
+Las siguientes líneas corrigen un desbalance en los datos que
+provienen de NCEP reanalysis.
+"""
+
+lat_ncep = flujo_meridional.lat
+
+#  global average of TOA radiation in reanalysis data
+weight_ncep = np.cos(np.deg2rad(lat_ncep)) / np.cos(np.deg2rad(lat_ncep)).mean(dim='lat')
+imbal_ncep = (data * weight_ncep).mean(dim='lat')
+print('The net downward TOA radiation flux in NCEP renalysis data is %0.1f W/m².' %imbal_ncep)
+
+convergencia_balanceada = data - imbal_ncep
+newimbalance = float((convergencia_balanceada * weight_ncep).mean(dim='lat'))
+print('The net downward TOA radiation flux after balancing the data is %0.2e W/m².' %newimbalance)
+
+fig, ax = plt.subplots()
+ax.plot(lat_ncep, inferred_heat_transport(convergencia_balanceada))
+ax.set_ylabel('PW')
+ax.set_xlabel('Latitud [º]')
+ax.set_xticks(ticks)
+ax.grid()
+ax.set_title('Transporte de energía meridional inferido')
+plt.show()
