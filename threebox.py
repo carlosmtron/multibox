@@ -114,4 +114,4 @@ print("Suma de convergencias = ", suma_dseta(solucion.x))
 print("\nTemperaturas en ºC:")
 print(solucion.x-273.15)
 
-print("\nTemp. promedio:", np.average(solucion.x)-273.15)
+print("\nTemp. promedio:", np.average(solucion.x)-273.15, "ºC")
