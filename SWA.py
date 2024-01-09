@@ -9,9 +9,9 @@ from scipy.integrate import quad
 # Constantes del problema #
 ###########################
 
-tilt = 0.408407044966673121 # Axial tilt (rad)
+tilt = 0.408407044966673121 # Inclinación del eje (rad)
 t0   = 3.15576e7  # Período de traslación (días)
-S    = 1360       # Constante Solar (W/m²)
+S    = 1361.0       # Constante Solar (W/m²)
 
 
 ###############

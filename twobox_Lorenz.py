@@ -2,28 +2,32 @@
 # Autor Carlos M. Silva
 # csilva@fceia.unr.edu.ar
 #
-# Programa basado en el modelo de 2 cajas descripto en Kleidon (2009)
-# Itera para diferentes valores de kab.
-# Resuelve numéricamente las ecuaciones diferenciales de la temperatura vs.
-# tiempo para cada caja.
+# Programa basado en el modelo de dos  cajas descripto por
+# Lorenz et. al. (2001) y Kleidon (2009), entre otros.
+# Itera para diferentes valores de k (= kab).
+# Resuelve numéricamente las ecuaciones diferenciales de la
+# temperatura en función del  tiempo para cada caja.
 # Finalmente grafica las temperaturas del estado estacionario
-# en función de kab.
+# y la producción de entropía en función de k.
+#
+# En este código, sigma hace referencia a la produccion
+# de entropía por unidad de superficie.
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.integrate import odeint
 
+plt.rcParams['text.usetex'] = True
+
 # Constantes del problema
-SWA = 316.0
-SWB = 220
+SWA = 277.8
+SWB = 171.8
 C = 2e+08
-A_CELSIUS = 203.3 #(North et.al., 1981) Wm⁻²
-BETA = 2.09   #Ibid. Wm⁻2ºC⁻¹
+A_CELSIUS = 208
+BETA = 1.9
 ALPHA = A_CELSIUS-BETA*273.15
-#
 GAMMA1 = (SWA-ALPHA)/C
 GAMMA2 = (SWB-ALPHA)/C
-ZETA = -ALPHA/C
 
 # Funciones
 def fab(kab, ta, tb):
@@ -33,12 +37,12 @@ def fab(kab, ta, tb):
 
 def sigma_ab(kab, ta, tb):
     # Producción de entropía por flujo pseudomeridional
-    return fab(ta,tb,kab)*(1/tb-1/ta)
+    return fab(kab, ta, tb)*(1/tb-1/ta)
 
 
 def sigma_ingress(ta, tb):
     # Producción de entropía por radiación que ingresa en las dos cajas
-    return SWA*(1/ta+-1/5760.0) + SWB*(1/tb-1/5760.0)
+    return SWA*(1/ta-1/5760.0) + SWB*(1/tb-1/5760.0)
 
 
 def NEE(ta,tb):
@@ -54,9 +58,8 @@ def df(x,t,delta,epsilon):
     return [diffTa, diffTb]
 
 
-
 # Condiciones Iniciales
-temp_inicial = [320, 268]
+temp_inicial = [312.2, 267.65]
 
 # Rango de tiempo
 npasos = 10000
@@ -78,7 +81,6 @@ for kab in lista:
     ii+=1
 
 
-
 # Voy a calcular fab y produccion de entropía para cada kab
 sigmas = np.zeros((num_k,5))
 sigmas[:,0] = temp_estacionaria[:,0]
@@ -92,30 +94,49 @@ for jj in range(num_k):
 # Voy a determinar el máximo sigma_ab y las temperaturas correspondientes
 busqueda = sigmas[:,2]
 sigma_max = np.amax(busqueda)
-temperatura_a = temp_estacionaria[np.where(np.amax(busqueda)),1]
-temperatura_b = temp_estacionaria[np.where(np.amax(busqueda)),2]
-print("sigma_max:", sigma_max, temperatura_a, temperatura_b)
-                                  
-    
-# Grafico los para t infinito T, \sigma_{AB} y F_{AB} en función de k_{AB}
-fig, axs = plt.subplots(3, sharex=True, sharey=False)
+k_indice = np.where(sigmas[:,2]==sigma_max)[0][0]
+k_inferencia = temp_estacionaria[k_indice,0]
+temperatura_a = temp_estacionaria[k_indice,1]
+temperatura_b = temp_estacionaria[k_indice,2]
+print("P_max [W/m²K]:", sigma_max)
+print("kab inferido [W/m²K]:", k_inferencia)
+print("Ta [K]:", temperatura_a, "=", temperatura_a-273.15, "[ºC]")
+print("Tb [K]:", temperatura_b, "=", temperatura_b-273.15, "[ºC]")
 
-axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1])
-axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,2])
-axs[0].set_ylabel('T [°C]')
-axs[0].grid(True)
-
-axs[1].plot(sigmas[:,0],sigmas[:,2], "tab:green")
-#axs[1].plot(sigmas[:,0],sigmas[:,3], "tab:pink")
-#axs[1].plot(sigmas[:,0],sigmas[:,4], "tab:purple")
-axs[1].set_ylabel('$\sigma_{AB}$ [mW m$^{-2}$K$^{-1}$]')
-axs[1].set_autoscaley_on(True)
-axs[1].grid(True)
-
-axs[2].plot(sigmas[:,0],sigmas[:,1], "tab:red")
-axs[2].set_ylabel('$F_{AB}$ [W m$^{-2}$]')
-axs[2].grid(True)
+# Grafico para t infinito T, P y F_{AB} en función de k.
+fig, axs = plt.subplots(2, sharex=True, sharey=False)
 
 plt.xscale('log')
-plt.xlabel('$k_{AB}$ [W m$^{-2}$K$^{-1}$]')
+plt.xlabel('$k\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
+
+# Bandas de Tº observada
+tmax_ecuador = 302.7891*np.ones(num_k)
+tmin_ecuador = 293.92905*np.ones(num_k)
+tmax_polos = 281.56*np.ones(num_k)
+tmin_polos = 264.44*np.ones(num_k)
+
+axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1],
+            label="$T_{\infty,A}$")
+axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,2],
+            label="$T_{\infty,B}$")
+axs[0].fill_between(temp_estacionaria[:,0], tmin_ecuador, tmax_ecuador, alpha=0.4)
+axs[0].fill_between(temp_estacionaria[:,0], tmin_polos, tmax_polos, alpha=0.4)
+axs[0].set_ylabel('$T_\infty\ [\mbox{K}]$')
+axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310])
+axs[0].grid()
+axs[0].legend()
+
+axs[1].plot(sigmas[:,0],sigmas[:,2], "tab:green", label="$\mathcal{P}$")
+axs[1].set_ylim([0, 0.01])
+axs[1].set_ylabel('$\mathcal{P}\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
+secundario = axs[1].twinx()
+secundario.plot(sigmas[:,0],sigmas[:,1], "tab:red", label="$F_{AB}$")
+secundario.set_ylabel('$F_{AB}\ [\mbox{W m}^{-2}]$')
+secundario.set_ylim([0, 60])
+lines = axs[1].get_lines() + secundario.get_lines()
+axs[1].legend(lines, [line.get_label() for line in lines], loc='upper left')
+
+axs[1].grid()
+
+plt.savefig('doscajas_MEP_results.pdf')
 plt.show()

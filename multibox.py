@@ -10,9 +10,9 @@ import xarray as xr
 # Constantes del problema #
 ###########################
 
-area = 1              # Área de cada sector
-acels = 210           # Parámetro optico a en W/m²ºC
-b = 2                 # Parámetro óptico b
+area = 1              # Área de c/sector (1 -> trabajo por m²)
+acels = 208.0         # Parámetro optico a en W/m²ºC
+b = 1.9               # Parámetro óptico b
 a = acels-b*273.15    # Parámetro óptico a en W/m²K
 
 
