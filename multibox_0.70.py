@@ -164,7 +164,9 @@ def inferred_heat_transport(energy_in, lat=None, latax=None):
     Will attempt to return data in xarray.DataArray if possible.
     '''
     from scipy import integrate
-    from climlab import constants as const
+
+    const_a = 6373000.0
+    
     if lat is None:
         try: lat = energy_in.lat
         except:
@@ -178,7 +180,7 @@ def inferred_heat_transport(energy_in, lat=None, latax=None):
             raise ValueError('Need to supply axis number for integral over latitude.')
     #  result as plain numpy array
     integral = integrate.cumtrapz(field, x=lat_rad, initial=0., axis=latax)
-    result = (1E-15 * 2 * np.math.pi * const.a**2 * integral)
+    result = (1E-15 * 2 * np.math.pi * const_a**2 * integral)
     if isinstance(field, xr.DataArray):
         result_xarray = field.copy()
         result_xarray.values = result

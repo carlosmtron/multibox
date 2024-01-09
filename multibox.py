@@ -129,100 +129,26 @@ print("\nTemp. promedio:", np.average(solucion.x)-273.15)
 ##  GRÁFICOS   ##
 #################
 
+
+plt.rcParams['text.usetex'] = True
+plt.rc('xtick', labelsize=14)
+plt.rc('ytick', labelsize=14)
+
 ticks = [-90, -60, -30, 0, 30, 60, 90]
 
 plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="")
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
-plt.title("Distribución de temperaturas")
-plt.xlabel("Latitud [º]")
-plt.ylabel("Temperatura [ºC]")
+# plt.title("Distribución de temperaturas")
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("Temperatura [ºC]", fontsize=16)
 plt.show()
 
 plt.plot(dcajas[:, 0], Zfin, marker="o", ls="")
-plt.grid(True, color='0.95')
-plt.title("Convergencia de flujos meridionales")
-plt.xlabel("Latitud [º]")
-plt.ylabel("ζ [W/m²]")
-plt.show()
-
-
-#################################################
-##  Cálculo de flujo meridional por integral   ##
-#################################################
-
-def inferred_heat_transport(energy_in, lat=None, latax=None):
-    '''Compute heat transport as integral of local energy imbalance.
-    Required input:
-        energy_in: energy imbalance in W/m2, positive in to domain
-    As either numpy array or xarray.DataArray
-    If using plain numpy, need to supply these arguments:
-        lat: latitude in degrees
-        latax: axis number corresponding to latitude in the data
-            (axis over which to integrate)
-    returns the heat transport in PW.
-    Will attempt to return data in xarray.DataArray if possible.
-    '''
-    from scipy import integrate
-    from climlab import constants as const
-    if lat is None:
-        try: lat = energy_in.lat
-        except:
-            raise InputError('Need to supply latitude array if input data is not self-describing.')
-    lat_rad = np.deg2rad(lat)
-    coslat = np.cos(lat_rad)
-    field = coslat*energy_in
-    if latax is None:
-        try: latax = field.get_axis_num('lat')
-        except:
-            raise ValueError('Need to supply axis number for integral over latitude.')
-    #  result as plain numpy array
-    integral = integrate.cumtrapz(field, x=lat_rad, initial=0., axis=latax)
-    result = (1E-15 * 2 * np.math.pi * const.a**2 * integral)
-    if isinstance(field, xr.DataArray):
-        result_xarray = field.copy()
-        result_xarray.values = result
-        return result_xarray
-    else:
-        return result
-
-
-data = xr.DataArray(Zfin, dims=("lat"), coords={"lat": dcajas[:, 0]})
-print(data)
-
-flujo_meridional = inferred_heat_transport(data)
-
-print(flujo_meridional)
-
-plt.plot(flujo_meridional.lat,flujo_meridional.values)
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
-plt.title("Flujo meridional")
-plt.xlabel("Latitud [º]")
-plt.ylabel("Flujo meridional [PW]")
+# plt.title("Convergencia de flujos meridionales")
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("$\zeta$ [W/m$^2$]", fontsize=16)
 plt.show()
 
-"""
-Las siguientes líneas corrigen un desbalance en los datos que
-provienen de NCEP reanalysis.
-"""
-
-lat_ncep = flujo_meridional.lat
-
-#  global average of TOA radiation in reanalysis data
-weight_ncep = np.cos(np.deg2rad(lat_ncep)) / np.cos(np.deg2rad(lat_ncep)).mean(dim='lat')
-imbal_ncep = (data * weight_ncep).mean(dim='lat')
-print('The net downward TOA radiation flux in NCEP renalysis data is %0.1f W/m².' %imbal_ncep)
-
-convergencia_balanceada = data - imbal_ncep
-newimbalance = float((convergencia_balanceada * weight_ncep).mean(dim='lat'))
-print('The net downward TOA radiation flux after balancing the data is %0.2e W/m².' %newimbalance)
-
-fig, ax = plt.subplots()
-ax.plot(lat_ncep, inferred_heat_transport(convergencia_balanceada))
-ax.set_ylabel('PW')
-ax.set_xlabel('Latitud [º]')
-ax.set_xticks(ticks)
-ax.grid()
-ax.set_title('Transporte de energía meridional inferido')
-plt.show()
