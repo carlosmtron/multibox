@@ -12,14 +12,19 @@ plt.rc('ytick', labelsize=14)
 
 
 # Datos de TOA provinientes de NCEP reanalysis
-url = 'http://apdrc.soest.hawaii.edu:80/dods/public_data/Reanalysis_Data/NCEP/NCEP/clima/'
-ncep_dswrf = xr.open_dataset(url + "other_gauss/dswrf")
-ncep_uswrf = xr.open_dataset(url + "other_gauss/uswrf")
+#url = 'http://apdrc.soest.hawaii.edu:80/dods/public_data/Reanalysis_Data/NCEP/NCEP/clima/'
+#ncep_dswrf = xr.open_dataset(url + "other_gauss/dswrf")
+#ncep_uswrf = xr.open_dataset(url + "other_gauss/uswrf")
+ncep_dswrf = xr.open_dataset("data/dswrf.ntat.gauss.1975.nc")
+ncep_uswrf = xr.open_dataset("data/uswrf.ntat.gauss.1975.nc")
+
 IncomingSWmap = ncep_dswrf.dswrf.mean(dim=('time'))
 ReflectedSWmap = ncep_uswrf.uswrf.mean(dim='time')
 
+
 Net_SW_map = IncomingSWmap - ReflectedSWmap
 albedo_map = ReflectedSWmap / IncomingSWmap
+
 
 fig, axes, cx = mapas.make_map(albedo_map,plt.cm.Blues)
 plt.tight_layout()
@@ -82,3 +87,9 @@ plt.grid()
 plt.tight_layout()
 plt.savefig("SW_neto.pdf")
 plt.show()
+
+
+tronix = np.zeros((len(latitudes), 2))
+tronix[:,0] = latitudes
+tronix[:,1] = albedo.values
+np.savetxt('latitudes-new.dat', tronix)

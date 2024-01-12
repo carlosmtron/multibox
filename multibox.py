@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import SWA
-import xarray as xr
+# import xarray as xr
 
 ###########################
 # Constantes del problema #
@@ -23,7 +23,7 @@ def LWA(T):
 
 # Voy a leer el archivo "latitudes.dat" cuyas columnas son:
 # latitud y albedo
-albedo_vs_latitud = np.loadtxt('latitudes.dat')
+albedo_vs_latitud = np.loadtxt('latitudes-new.dat')
 nboxes = albedo_vs_latitud.shape[0]              # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
 
@@ -39,7 +39,7 @@ divisiones = np.arange(0,nboxes)  # Grilla de números naturales de 0 a nboxes
 
 # Defino las temperaturas iniciales. Empiezo con T homogénea.
 for i in divisiones:
-    dcajas[i, 3] = 200  # Kelvin
+    dcajas[i, 3] = 0  # Kelvin
 
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
@@ -124,11 +124,9 @@ print(solucion.x-273.15)
 print("\nTemp. promedio:", np.average(solucion.x)-273.15)
 
 
-
 #################
 ##  GRÁFICOS   ##
 #################
-
 
 plt.rcParams['text.usetex'] = True
 plt.rc('xtick', labelsize=14)
@@ -142,6 +140,7 @@ plt.grid(True, color='0.95')
 # plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
+plt.savefig("temperaturas.pdf")
 plt.show()
 
 plt.plot(dcajas[:, 0], Zfin, marker="o", ls="")
@@ -150,5 +149,51 @@ plt.grid(True, color='0.95')
 # plt.title("Convergencia de flujos meridionales")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$\zeta$ [W/m$^2$]", fontsize=16)
+plt.savefig("convergencias.pdf")
 plt.show()
 
+# Cálculo de LW final
+vector_LW = LWA(solucion.x)
+print(vector_LW)
+
+# SW de Fukumura
+SW_fuku = np.loadtxt("SWfuku.dat")
+
+plt.plot(dcajas[:, 0], vector_LW, label="$LW$")
+plt.plot(dcajas[:,0], dcajas[:,1], label="$SW$")
+plt.plot(SW_fuku[:,0], SW_fuku[:,1], label="$SW$ Fukumura y Ozawa")
+plt.xticks(ticks)
+plt.grid(True, color='0.95')
+plt.legend(fontsize=10)
+# plt.title("LWR en TOA")
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("$LW$ y $SW$ en TOA [W/m$^2$]", fontsize=16)
+plt.savefig("comp_LWySW.pdf")
+plt.show()
+
+
+######################################
+##  Comparación con observaciones   ##
+######################################
+
+import xarray as xr
+url = 'http://apdrc.soest.hawaii.edu:80/dods/public_data/Reanalysis_Data/NCEP/NCEP/clima/'
+#url = 'http://apdrc.soest.hawaii.edu/dods/public_data/Reanalysis_Data/NCEP/NCEP/daily/'
+ncep_Ts = xr.open_dataset(url + 'surface_gauss/skt')
+#ncep_Ts = xr.open_dataset(url + 'surface_gauss/air')
+T_obs = ncep_Ts.skt.mean(dim=('lon', 'time'))
+#T_obs = ncep_Ts.air.mean(dim=('lon', 'time'))
+
+T_fuku = np.loadtxt("observaciones.dat")
+
+
+plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="")
+plt.plot(T_obs.lat, T_obs.values)
+plt.plot(T_fuku[:,0], T_fuku[:,1]-273.15)
+plt.xticks(ticks)
+plt.grid(True, color='0.95')
+# plt.title("Distribución de temperaturas")
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("Temperatura [ºC]", fontsize=16)
+plt.savefig("temperaturas_comp.pdf")
+plt.show()
