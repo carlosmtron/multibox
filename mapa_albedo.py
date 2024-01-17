@@ -20,16 +20,17 @@ ticks = [-90, -60, -30, 0, 30, 60, 90]
 
 plt.plot(latitudes, resta.values)
 plt.xticks(ticks)
-plt.grid(True, color='0.95')
+plt.grid()
 plt.xlabel("Latitud [º]", fontsize=16)
 plt.ylabel("SWR [W/m²]", fontsize=16)
+plt.savefig("SW_neto.pdf")
 plt.show()
 
 albedo = outsw/incoming
 
 plt.plot(latitudes, albedo.values)
 plt.xticks(ticks)
-plt.grid(True, color='0.95')
+plt.grid()
 plt.xlabel("Latitud [º]", fontsize=16)
 plt.ylabel("albedo", fontsize=16)
 plt.show()
@@ -62,8 +63,8 @@ plt.show()
 
 fig, axes, cx = mapas.make_map(incoming)
 
-fig.suptitle('Radiación SW reflejada en TOA', fontsize=16)
-axes[1].set_xlabel('Radiación reflejada [W/m²]')
+fig.suptitle('Radiación SW incidente en TOA', fontsize=16)
+axes[1].set_xlabel('Radiación incidente [W/m²]')
 
 plt.show()
 

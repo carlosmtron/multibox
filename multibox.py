@@ -14,12 +14,22 @@ area = 1              # Área de c/sector (1 -> trabajo por m²)
 acels = 208.0         # Parámetro optico a en W/m²ºC
 b = 1.9               # Parámetro óptico b
 a = acels-b*273.15    # Parámetro óptico a en W/m²K
+# RT = 6373000.0        # Radio terrestre en m
 
 
 def LWA(T):
     # Radiación infrarroja que sale al espacio
     return a+b*T
 
+"""
+def area(lat, ncajas):
+    # lat es la latitud central de la zona.
+    # ncajas es la cantidad de celdas del problema.
+    ancho = 180. / ncajas
+    phi1 = lat - ancho/2
+    phi2 = lat + ancho/2
+    return 2*np.pi * RT**2 * np.abs(np.cos(phi2) - np.cos(phi1))
+"""    
 
 # Voy a leer el archivo "latitudes.dat" cuyas columnas son:
 # latitud y albedo
@@ -39,7 +49,7 @@ divisiones = np.arange(0,nboxes)  # Grilla de números naturales de 0 a nboxes
 
 # Defino las temperaturas iniciales. Empiezo con T homogénea.
 for i in divisiones:
-    dcajas[i, 3] = 0  # Kelvin
+    dcajas[i, 3] = 200.  # Kelvin
 
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
@@ -134,7 +144,7 @@ plt.rc('ytick', labelsize=14)
 
 ticks = [-90, -60, -30, 0, 30, 60, 90]
 
-plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="")
+plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="", markersize=4)
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
 # plt.title("Distribución de temperaturas")
@@ -143,12 +153,13 @@ plt.ylabel("Temperatura [ºC]", fontsize=16)
 plt.savefig("temperaturas.pdf")
 plt.show()
 
-plt.plot(dcajas[:, 0], Zfin, marker="o", ls="")
+plt.plot(dcajas[:, 0], Zfin, marker="o", ls="", markersize=4)
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
 # plt.title("Convergencia de flujos meridionales")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$\zeta$ [W/m$^2$]", fontsize=16)
+plt.tight_layout()
 plt.savefig("convergencias.pdf")
 plt.show()
 
@@ -157,11 +168,11 @@ vector_LW = LWA(solucion.x)
 print(vector_LW)
 
 # SW de Fukumura
-SW_fuku = np.loadtxt("SWfuku.dat")
+# SW_fuku = np.loadtxt("SWfuku.dat")
 
 plt.plot(dcajas[:, 0], vector_LW, label="$LW$")
 plt.plot(dcajas[:,0], dcajas[:,1], label="$SW$")
-plt.plot(SW_fuku[:,0], SW_fuku[:,1], label="$SW$ Fukumura y Ozawa")
+# plt.plot(SW_fuku[:,0], SW_fuku[:,1], label="$SW$ Fukumura y Ozawa")
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
 plt.legend(fontsize=10)
@@ -177,23 +188,152 @@ plt.show()
 ######################################
 
 import xarray as xr
-url = 'http://apdrc.soest.hawaii.edu:80/dods/public_data/Reanalysis_Data/NCEP/NCEP/clima/'
-#url = 'http://apdrc.soest.hawaii.edu/dods/public_data/Reanalysis_Data/NCEP/NCEP/daily/'
-ncep_Ts = xr.open_dataset(url + 'surface_gauss/skt')
-#ncep_Ts = xr.open_dataset(url + 'surface_gauss/air')
+
+ncep_Ts = xr.open_dataset('data/skt.sfc.mon.ltm.1991-2020.nc')
 T_obs = ncep_Ts.skt.mean(dim=('lon', 'time'))
-#T_obs = ncep_Ts.air.mean(dim=('lon', 'time'))
 
-T_fuku = np.loadtxt("observaciones.dat")
+T_fuku = np.loadtxt("MEP-Fukumura.dat")
 
 
-plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="")
-plt.plot(T_obs.lat, T_obs.values)
-plt.plot(T_fuku[:,0], T_fuku[:,1]-273.15)
+plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="", label="MEP", markersize=4)
+plt.plot(T_obs.lat, T_obs.values, label="NCEP Reanalysis 1991-2020")
+plt.plot(T_fuku[:,0], T_fuku[:,1]-273.15, label="MEP Fukumura y Ozawa (2014)",  ls="--", markersize=4)
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
+plt.legend(fontsize=10)
 # plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
 plt.savefig("temperaturas_comp.pdf")
+plt.show()
+
+
+########################################
+## Cálculo de los Flujos meridionales ##
+########################################
+
+puntos = np.arange(0,nboxes-1)
+
+flujosF = []
+flujosF.append(0)
+
+latitudes = []
+latitudes.append(-90)
+
+for i in puntos:
+    fluxF = -(Zfin[i]-flujosF[i])
+    flujosF.append(fluxF)
+    latF = (dcajas[i,0]+dcajas[i+1,0])*0.5
+    latitudes.append(latF)
+
+flujosF.append(0)
+latitudes.append(90)
+
+tabla = np.zeros((nboxes+1,2))
+tabla[:,0] = latitudes
+tabla[:,1] = flujosF
+
+print("\n Flujos meridionales")
+print(tabla)
+
+plt.plot(latitudes, flujosF)
+plt.xticks(ticks)
+plt.grid()
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("Flujo de energía meridional [W/m$^2$]", fontsize=16)
+plt.tight_layout()
+plt.savefig("flujo_meridional.pdf")
+plt.show()
+
+# Vamos a muliplicar por el área zonal para poderlo comparar
+
+const_a = 6373000.0 #Radio terrestre
+
+fluxH = []
+for f_i in flujosF:
+    if f_i == 0:
+        fluxH.append(0)
+    else:
+        hi = f_i*2*np.pi*const_a**2 * np.abs(
+            np.cos(np.deg2rad(dcajas[i+1,0]))-np.cos(np.deg2rad(dcajas[i,0])))
+        fluxH.append(1E-15*hi)
+
+
+plt.plot(latitudes, fluxH)
+plt.xticks(ticks)
+plt.grid()
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
+plt.ylabel("Flujo de energía meridional [PW]", fontsize=16)
+plt.tight_layout()
+#plt.savefig("flujo_meridional.pdf")
+plt.show()
+
+
+#################################################
+##  Cálculo de flujo meridional por integral   ##
+#################################################
+
+def inferred_heat_transport(energy_in, lat=None, latax=None):
+    from scipy import integrate
+
+    const_a = 6373000.0 #Radio terrestre
+    
+    if lat is None:
+        lat = energy_in.lat
+
+    lat_rad = np.deg2rad(lat)
+    coslat = np.cos(lat_rad)
+    field = coslat*energy_in
+    if latax is None:
+        latax = field.get_axis_num('lat')
+    integral = integrate.cumtrapz(field, x=lat_rad, initial=0., axis=latax)
+    result = (1E-15 * 2 * np.pi * const_a**2 * integral)
+    # Si la entrada era un xarray, devuelve un xarray
+    if isinstance(field, xr.DataArray):
+        result_xarray = field.copy()
+        result_xarray.values = result
+        return result_xarray
+    else:
+        return result
+
+
+data = xr.DataArray(-Zfin, dims=("lat"), coords={"lat": dcajas[:, 0]})
+print(data)
+
+flujo_meridional = inferred_heat_transport(data)
+
+print(flujo_meridional)
+
+plt.plot(flujo_meridional.lat,flujo_meridional.values)
+plt.xticks(ticks)
+plt.grid(True, color='0.95')
+plt.title("Flujo meridional")
+plt.xlabel("Latitud [º]")
+plt.ylabel("Flujo meridional [PW]")
+plt.show()
+
+
+"""
+Las siguientes líneas corrigen un desbalance en los datos que
+provienen de NCEP reanalysis.
+"""
+
+lat_ncep = flujo_meridional.lat
+
+#  global average of TOA radiation in reanalysis data
+weight_ncep = np.cos(np.deg2rad(lat_ncep)) / np.cos(np.deg2rad(lat_ncep)).mean(dim='lat')
+imbal_ncep = (data * weight_ncep).mean(dim='lat')
+print('The net downward TOA radiation flux in NCEP renalysis data is %0.1f W/m².' %imbal_ncep)
+
+convergencia_balanceada = data - imbal_ncep
+newimbalance = float((convergencia_balanceada * weight_ncep).mean(dim='lat'))
+print('The net downward TOA radiation flux after balancing the data is %0.2e W/m².' %newimbalance)
+
+fig, ax = plt.subplots()
+ax.plot(lat_ncep, inferred_heat_transport(convergencia_balanceada))
+ax.set_ylabel('PW')
+ax.set_xlabel('Latitud [º]')
+ax.set_xticks(ticks)
+ax.grid()
+ax.set_title('Transporte de energía meridional inferido')
 plt.show()
