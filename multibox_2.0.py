@@ -10,11 +10,10 @@ import SWA
 # Constantes del problema #
 ###########################
 
-# area = 1              # Área de c/sector (1 -> trabajo por m²)
 acels = 208.0         # Parámetro optico a en W/m²ºC
 b = 1.9               # Parámetro óptico b
 a = acels-b*273.15    # Parámetro óptico a en W/m²K
-RT = 1 # 6373000.0        # Radio terrestre en m
+RT = 6373000.0        # Radio terrestre en m
 
 
 def LWA(T):
@@ -28,7 +27,7 @@ def area(latgrados, ncajas):
     ancho = np.pi / ncajas
     phi1 = lat - ancho/2
     phi2 = lat + ancho/2
-    return 2*np.pi * RT**2 * np.abs(np.sin(phi2) - np.sin(phi1))
+    return 2*np.pi * np.abs(np.sin(phi2) - np.sin(phi1))
     
 
 # Voy a leer el archivo "latitudes.dat" cuyas columnas son:
@@ -61,8 +60,6 @@ for ii in divisiones:
     dcajas[ii, 4] = area(lat, nboxes)
     print(f"{lat:^+13.2f} \t {albedo:^6.2f} \t {dcajas[ii,1]:^10.4f} \t {dcajas[ii,4]:^10.3E}")
 
-# print("areas:\n", dcajas[:,4], "\n --------------------- ")
-    
 def calculo_dseta(vtemp):
     for i in divisiones:
         dseta[i] = (LWA(vtemp[i]) - dcajas[i, 1])*dcajas[i,4]
@@ -70,10 +67,8 @@ def calculo_dseta(vtemp):
 
 
 def suma_dseta(vtemp):
-    sumaf = 0
     dseta = calculo_dseta(vtemp)
-    for ii in divisiones:
-        sumaf += dseta[ii]
+    sumaf = np.sum(dseta)
     return sumaf
 
 
@@ -119,17 +114,17 @@ solucion = minimize(sigmaT, semilla, method='SLSQP', bounds=bnds,
                     options={'maxiter': 2000, 'disp': True})
 
 
-print("Cálculo de temperaturas:")
+print("\nCálculo de temperaturas:\n")
 print(solucion)
 
-Zfin = calculo_dseta(solucion.x)*6373000.0 
+Zfin = calculo_dseta(solucion.x) * RT * RT
 
-print("\nConvergencias meridionales:")
+print("\nConvergencias meridionales:\n")
 print(Zfin)
 
-print("Suma de convergencias = ", suma_dseta(solucion.x))
+print("\nSuma de convergencias = ", suma_dseta(solucion.x) * RT * RT)
 
-print("\nTemperaturas en ºC:")
+print("\nTemperaturas en ºC:\n")
 print(solucion.x-273.15)
 
 print("\nTemp. promedio:", np.average(solucion.x)-273.15)
@@ -164,6 +159,8 @@ plt.tight_layout()
 plt.savefig("convergencias.pdf")
 plt.show()
 
+
+
 # Cálculo de LW final
 vector_LW = LWA(solucion.x)
 print(vector_LW)
@@ -180,6 +177,7 @@ plt.legend(fontsize=10)
 # plt.title("LWR en TOA")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$LW$ y $SW$ en TOA [W/m$^2$]", fontsize=16)
+plt.tight_layout()
 plt.savefig("comp_LWySW.pdf")
 plt.show()
 
@@ -205,6 +203,7 @@ plt.legend(fontsize=10)
 # plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
+plt.tight_layout()
 plt.savefig("temperaturas_comp.pdf")
 plt.show()
 
@@ -241,101 +240,7 @@ plt.plot(latitudes, flujosF)
 plt.xticks(ticks)
 plt.grid()
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
-plt.ylabel("Flujo de energía meridional [W/m$^2$]", fontsize=16)
+plt.ylabel("Flujo de energía meridional [W]", fontsize=16)
 plt.tight_layout()
 plt.savefig("flujo_meridional.pdf")
 plt.show()
-
-# Vamos a muliplicar por el área zonal para poderlo comparar
-"""
-const_a = 6373000.0 #Radio terrestre
-
-fluxH = []
-for f_i in flujosF:
-    if f_i == 0:
-        fluxH.append(0)
-    else:
-        hi = f_i*2*np.pi*const_a**2 * (
-            np.cos(dcajas[i+1,0])-np.cos(dcajas[i,0]))
-        fluxH.append(hi)
-
-
-plt.plot(latitudes, fluxH)
-plt.xticks(ticks)
-plt.grid()
-plt.xlabel("Latitud [$^\circ$]", fontsize=16)
-plt.ylabel("Flujo de energía meridional [W]", fontsize=16)
-plt.tight_layout()
-#plt.savefig("flujo_meridional.pdf")
-plt.show()
-"""
-"""
-#################################################
-##  Cálculo de flujo meridional por integral   ##
-#################################################
-
-def inferred_heat_transport(energy_in, lat=None, latax=None):
-    from scipy import integrate
-
-    const_a = 6373000.0 #Radio terrestre
-    
-    if lat is None:
-        lat = energy_in.lat
-
-    lat_rad = np.deg2rad(lat)
-    coslat = np.cos(lat_rad)
-    field = coslat*energy_in
-    if latax is None:
-        latax = field.get_axis_num('lat')
-    integral = integrate.cumtrapz(field, x=lat_rad, initial=0., axis=latax)
-    result = (1E-15 * 2 * np.pi * const_a**2 * integral)
-    # Si la entrada era un xarray, devuelve un xarray
-    if isinstance(field, xr.DataArray):
-        result_xarray = field.copy()
-        result_xarray.values = result
-        return result_xarray
-    else:
-        return result
-
-
-data = xr.DataArray(-Zfin, dims=("lat"), coords={"lat": dcajas[:, 0]})
-print(data)
-
-flujo_meridional = inferred_heat_transport(data)
-
-print(flujo_meridional)
-
-plt.plot(flujo_meridional.lat,flujo_meridional.values)
-plt.xticks(ticks)
-plt.grid(True, color='0.95')
-plt.title("Flujo meridional")
-plt.xlabel("Latitud [º]")
-plt.ylabel("Flujo meridional [PW]")
-plt.show()
-
-
-"""
-#Las siguientes líneas corrigen un desbalance en los datos que
-#provienen de NCEP reanalysis.
-"""
-
-lat_ncep = flujo_meridional.lat
-
-#  global average of TOA radiation in reanalysis data
-weight_ncep = np.cos(np.deg2rad(lat_ncep)) / np.cos(np.deg2rad(lat_ncep)).mean(dim='lat')
-imbal_ncep = (data * weight_ncep).mean(dim='lat')
-print('The net downward TOA radiation flux in NCEP renalysis data is %0.1f W/m².' %imbal_ncep)
-
-convergencia_balanceada = data - imbal_ncep
-newimbalance = float((convergencia_balanceada * weight_ncep).mean(dim='lat'))
-print('The net downward TOA radiation flux after balancing the data is %0.2e W/m².' %newimbalance)
-
-fig, ax = plt.subplots()
-ax.plot(lat_ncep, inferred_heat_transport(convergencia_balanceada))
-ax.set_ylabel('PW')
-ax.set_xlabel('Latitud [º]')
-ax.set_xticks(ticks)
-ax.grid()
-ax.set_title('Transporte de energía meridional inferido')
-plt.show()
-"""
