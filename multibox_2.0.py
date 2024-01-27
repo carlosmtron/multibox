@@ -137,6 +137,9 @@ print("\nTemp. promedio:", np.average(solucion.x)-273.15)
 plt.rcParams['text.usetex'] = True
 plt.rc('xtick', labelsize=14)
 plt.rc('ytick', labelsize=14)
+plt.rcParams["grid.color"]= "#DDDDDD"
+plt.rcParams["grid.linewidth"] = 0.8
+
 
 ticks = [-90, -60, -30, 0, 30, 60, 90]
 
@@ -244,3 +247,13 @@ plt.ylabel("Flujo de energía meridional [W]", fontsize=16)
 plt.tight_layout()
 plt.savefig("flujo_meridional.pdf")
 plt.show()
+
+
+########################################
+## Exporto temperaturas a un archivo  ##
+########################################
+
+tronix = np.zeros((nboxes, 2))
+tronix[:,0] = dcajas[:, 0]
+tronix[:,1] = solucion.x-273.15
+np.savetxt('temperaturasMEP.dat', tronix)
