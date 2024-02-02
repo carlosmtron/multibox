@@ -23,8 +23,9 @@ ticks = [-90, -60, -30, 0, 30, 60, 90]
 plt.plot(latitudes, resta.values)
 plt.xticks(ticks)
 plt.grid()
-plt.xlabel("Latitud [º]", fontsize=16)
+plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("SWR [W/m²]", fontsize=16)
+plt.tight_layout()
 plt.savefig("SW_neto.pdf")
 plt.show()
 
@@ -42,6 +43,7 @@ tronix[:,0] = latitudes
 tronix[:,1] = albedo.values
 np.savetxt('latitudes-new.dat', tronix)
 
+# ESTO ESTÁ MUY DESPROLIJO. HAY UN DATASET ZONAL Y OTRO 2D.
 ceresmapa = xr.open_dataset("data/CERES_EBAF-TOA_Ed4.2_Subset_200003-202310-global.nc")
 ceresmapa
 

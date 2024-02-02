@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import SWA
-# import xarray as xr
+import xarray as xr
 
 ###########################
 # Constantes del problema #
@@ -32,7 +32,7 @@ def area(latgrados, ncajas):
 
 # Voy a leer el archivo "latitudes.dat" cuyas columnas son:
 # latitud y albedo
-albedo_vs_latitud = np.loadtxt('latitudes-new.dat')
+albedo_vs_latitud = np.loadtxt('data/latitudes-new.dat')
 nboxes = albedo_vs_latitud.shape[0]              # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
 
@@ -134,6 +134,7 @@ print("\nTemp. promedio:", np.average(solucion.x)-273.15)
 ##  GRÁFICOS   ##
 #################
 
+
 plt.rcParams['text.usetex'] = True
 plt.rc('xtick', labelsize=14)
 plt.rc('ytick', labelsize=14)
@@ -157,7 +158,7 @@ plt.xticks(ticks)
 plt.grid(True, color='0.95')
 # plt.title("Convergencia de flujos meridionales")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
-plt.ylabel("$\zeta$ [W/m$^2$]", fontsize=16)
+plt.ylabel("$\zeta\mathcal{A}$ [W]", fontsize=16)
 plt.tight_layout()
 plt.savefig("convergencias.pdf")
 plt.show()
@@ -167,13 +168,14 @@ plt.show()
 # Cálculo de LW final
 vector_LW = LWA(solucion.x)
 print(vector_LW)
+# Observaciones CERES
+ceres = xr.open_dataset("data/CERES_EBAF-TOA_Ed4.2_Subset_200003-202310.nc")
+LW_ceres = ceres.ztoa_lw_all_mon.mean(dim='time')
 
-# SW de Fukumura
-# SW_fuku = np.loadtxt("SWfuku.dat")
 
-plt.plot(dcajas[:, 0], vector_LW, label="$LW$")
-plt.plot(dcajas[:,0], dcajas[:,1], label="$SW$")
-# plt.plot(SW_fuku[:,0], SW_fuku[:,1], label="$SW$ Fukumura y Ozawa")
+plt.plot(dcajas[:, 0], vector_LW, label="$LW$ MEP")
+plt.plot(LW_ceres.lat, LW_ceres, label="$LW$ CERES")
+plt.plot(dcajas[:,0], dcajas[:,1], label="$SW$ MEP")
 plt.xticks(ticks)
 plt.grid(True, color='0.95')
 plt.legend(fontsize=10)
@@ -189,12 +191,11 @@ plt.show()
 ##  Comparación con observaciones   ##
 ######################################
 
-import xarray as xr
 
 ncep_Ts = xr.open_dataset('data/skt.sfc.mon.ltm.1991-2020.nc')
 T_obs = ncep_Ts.skt.mean(dim=('lon', 'time'))
 
-T_fuku = np.loadtxt("MEP-Fukumura.dat")
+T_fuku = np.loadtxt("data/MEP-Fukumura.dat")
 
 
 plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="", label="MEP", markersize=4)
@@ -215,35 +216,56 @@ plt.show()
 ## Cálculo de los Flujos meridionales ##
 ########################################
 
-puntos = np.arange(0,nboxes-1)
+def calculo_H(vlat, zetaA):
+    # Calcula los flujos meridionales H
+    # a partir de las convergencias.
+    # vlat: vector de latitudes
+    # zetaA: vector de convergencias multiplicadas
+    # por el área de la celda
 
-flujosF = []
-flujosF.append(0)
+    nboxes = zetaA.size
+    puntos = np.arange(0,nboxes-1)
+    
+    flujosH = []
+    flujosH.append(0)
+    
+    latitudes = []
+    latitudes.append(-90)
+    
+    for i in puntos:
+        fluxH = -(zetaA[i]-flujosH[i])
+        flujosH.append(fluxH)
+        latH = (vlat[i] + vlat[i+1]) * 0.5
+        latitudes.append(latH)
 
-latitudes = []
-latitudes.append(-90)
+    flujosH.append(-(zetaA[nboxes-1]-flujosH[nboxes-1]))
+    latitudes.append(90)
+    
+    tabla = np.zeros((nboxes+1,2))
+    tabla[:,0] = latitudes
+    tabla[:,1] = flujosH
 
-for i in puntos:
-    fluxF = -(Zfin[i]-flujosF[i])
-    flujosF.append(fluxF)
-    latF = (dcajas[i,0]+dcajas[i+1,0])*0.5
-    latitudes.append(latF)
+    return tabla
 
-flujosF.append(0)
-latitudes.append(90)
 
-tabla = np.zeros((nboxes+1,2))
-tabla[:,0] = latitudes
-tabla[:,1] = flujosF
+flujosH = calculo_H(dcajas[:,0], Zfin)
 
-print("\n Flujos meridionales")
-print(tabla)
+"""
+incoming = ceres.zsolar_mon.mean(dim='time')
+reflected = ceres.ztoa_sw_all_mon.mean(dim='time')
+SW_ceres = incoming - reflected
+Z_ceres = LW_ceres - SW_ceres
+ZA_ceres = Z_ceres*area(Z_ceres.lat, Z_ceres.lat.size)*RT*RT
 
-plt.plot(latitudes, flujosF)
+flujos_ceres = calculo_H(Z_ceres.lat, ZA_ceres)
+"""
+
+plt.plot(flujosH[:,0], flujosH[:,1])
+plt.plot(flujos_ceres[:,0], flujos_ceres[:,1])
 plt.xticks(ticks)
 plt.grid()
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
-plt.ylabel("Flujo de energía meridional [W]", fontsize=16)
+plt.ylabel("$\mathcal{H}$ [W]", fontsize=16)
 plt.tight_layout()
 plt.savefig("flujo_meridional.pdf")
 plt.show()
@@ -256,4 +278,4 @@ plt.show()
 tronix = np.zeros((nboxes, 2))
 tronix[:,0] = dcajas[:, 0]
 tronix[:,1] = solucion.x-273.15
-np.savetxt('temperaturasMEP.dat', tronix)
+np.savetxt('data/temperaturasMEP.dat', tronix)
