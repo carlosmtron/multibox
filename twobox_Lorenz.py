@@ -20,10 +20,10 @@ from scipy.integrate import odeint
 plt.rcParams['text.usetex'] = True
 
 # Constantes del problema
-SWA = 277.8
-SWB = 171.8
+SWA = 305.71
+SWB = 177.38
 C = 2e+08
-A_CELSIUS = 208
+A_CELSIUS = 208.0
 BETA = 1.9
 ALPHA = A_CELSIUS-BETA*273.15
 GAMMA1 = (SWA-ALPHA)/C
@@ -67,7 +67,7 @@ t = np.linspace(0, 3e+09, npasos)
 
 num_k = 4000 # cantidad de iteraciones de kab
 temp_estacionaria = np.zeros((num_k,3))
-ii=0
+ii = 0
 lista =  np.logspace(0,8,num_k)/1e3
 for kab in lista:
     delta = -(kab + BETA)/C
@@ -78,7 +78,7 @@ for kab in lista:
     temp_estacionaria[ii,0] = kab
     temp_estacionaria[ii,1] = sol[npasos-1,0]
     temp_estacionaria[ii,2] = sol[npasos-1,1]
-    ii+=1
+    ii += 1
 
 
 # Voy a calcular fab y produccion de entropía para cada kab
@@ -98,7 +98,7 @@ k_indice = np.where(sigmas[:,2]==sigma_max)[0][0]
 k_inferencia = temp_estacionaria[k_indice,0]
 temperatura_a = temp_estacionaria[k_indice,1]
 temperatura_b = temp_estacionaria[k_indice,2]
-print("P_max [W/m²K]:", sigma_max)
+print("P_max/A [W/m²K]:", sigma_max)
 print("kab inferido [W/m²K]:", k_inferencia)
 print("Ta [K]:", temperatura_a, "=", temperatura_a-273.15, "[ºC]")
 print("Tb [K]:", temperatura_b, "=", temperatura_b-273.15, "[ºC]")
@@ -110,10 +110,10 @@ plt.xscale('log')
 plt.xlabel('$k\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
 
 # Bandas de Tº observada
-tmax_ecuador = 302.7891*np.ones(num_k)
-tmin_ecuador = 293.92905*np.ones(num_k)
-tmax_polos = 281.56*np.ones(num_k)
-tmin_polos = 264.44*np.ones(num_k)
+tmax_ecuador = 303*np.ones(num_k)
+tmin_ecuador = 293*np.ones(num_k)
+tmax_polos = 291*np.ones(num_k)
+tmin_polos = 271*np.ones(num_k)
 
 axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1],
             label="$T_{\infty,A}$")
@@ -122,21 +122,22 @@ axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,2],
 axs[0].fill_between(temp_estacionaria[:,0], tmin_ecuador, tmax_ecuador, alpha=0.4)
 axs[0].fill_between(temp_estacionaria[:,0], tmin_polos, tmax_polos, alpha=0.4)
 axs[0].set_ylabel('$T_\infty\ [\mbox{K}]$')
-axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310])
+axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310, 320, 330])
 axs[0].grid()
+axs[0].minorticks_on()
 axs[0].legend()
 
 axs[1].plot(sigmas[:,0],sigmas[:,2], "tab:green", label="$\mathcal{P}/\mathcal{A}$")
-axs[1].set_ylim([0, 0.01])
+axs[1].set_ylim([0, 0.013])
 axs[1].set_ylabel('$\mathcal{P}/\mathcal{A}\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
 secundario = axs[1].twinx()
 secundario.plot(sigmas[:,0],sigmas[:,1], "tab:red", label="$F_{AB}$")
 secundario.set_ylabel('$F_{AB}\ [\mbox{W m}^{-2}]$')
-secundario.set_ylim([0, 60])
+secundario.set_ylim([0, 70])
 lines = axs[1].get_lines() + secundario.get_lines()
 axs[1].legend(lines, [line.get_label() for line in lines], loc='upper left')
 
 axs[1].grid()
-
+axs[1].minorticks_on()
 plt.savefig('doscajas_MEP_results.pdf')
 plt.show()

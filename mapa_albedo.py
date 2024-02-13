@@ -41,7 +41,7 @@ plt.show()
 tronix = np.zeros((len(latitudes), 2))
 tronix[:,0] = latitudes
 tronix[:,1] = albedo.values
-np.savetxt('latitudes-new.dat', tronix)
+np.savetxt('data/latitudes-new.dat', tronix)
 
 # ESTO ESTÁ MUY DESPROLIJO. HAY UN DATASET ZONAL Y OTRO 2D.
 ceresmapa = xr.open_dataset("data/CERES_EBAF-TOA_Ed4.2_Subset_200003-202310-global.nc")
@@ -119,7 +119,7 @@ plt.show()
 # ncep_Ts = xr.open_dataset('data/skt.sfc.mon.ltm.1991-2020.nc')
 # T_obs = ncep_Ts.skt.mean(dim=('lon', 'time'))
 T_ceres = mapatemp.mean(dim=('lon'))
-T_MEP = np.loadtxt("temperaturasMEP.dat")
+T_MEP = np.loadtxt("data/temperaturasMEP.dat")
 
 
 plt.plot(T_MEP[:, 0], T_MEP[:, 1], marker="o", ls="", label="MEP", markersize=4)

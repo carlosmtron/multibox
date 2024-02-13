@@ -7,9 +7,12 @@ import SWA
 url = 'http://apdrc.soest.hawaii.edu:80/dods/public_data/Reanalysis_Data/NCEP/NCEP/clima/'
 ncep_dswrf = xr.open_dataset(url + "other_gauss/dswrf")
 
-IncomingSWmap = ncep_dswrf.dswrf.mean(dim=('time'))
+ceres = xr.open_dataset("data/CERES_EBAF-TOA_Ed4.2_Subset_200003-202310.nc")
+incoming_ceres = ceres.zsolar_mon.mean(dim='time')
 
-latitudes = IncomingSWmap.lat.values
+incoming_ncep = ncep_dswrf.dswrf.mean(dim=('time'))
+
+latitudes = incoming_ncep.lat.values
 SW_neto = np.zeros((len(latitudes)))
 
 for ii in range(len(latitudes)):
@@ -19,10 +22,11 @@ plt.rcParams['text.usetex'] = True
 plt.rc('xtick', labelsize=14)
 plt.rc('ytick', labelsize=14)
 
-plt.plot(latitudes, SW_neto, label='Teórico')
-plt.plot(latitudes, IncomingSWmap.mean(dim='lon'), label='Observado')
+plt.plot(latitudes, SW_neto, label='Modelo')
+plt.plot(latitudes, incoming_ncep.mean(dim='lon'), label='NCEP Reanalysis 1991-2020')
+plt.plot(incoming_ceres.lat, incoming_ceres.values, label='CERES 2020-2023')
 plt.xlabel('Latitud [º]', fontsize=16)
-plt.ylabel('$SW$ en TOA [W m$^{-2}$]', fontsize=16)
+plt.ylabel('Radiación solar incidente en TOA [W m$^{-2}$]', fontsize=16)
 plt.grid()
 plt.legend(fontsize=10)
 plt.tight_layout()
