@@ -1,5 +1,12 @@
 #!/usr/bin/python3
 
+"""
+Modelo de insolación media anual como función de la latitud.
+Autor: Carlos Silva
+csilva@fceia.unr.edu.ar
+Febrero 2024
+"""
+
 from math import pi
 import numpy as np
 from scipy.integrate import quad
@@ -11,8 +18,7 @@ from scipy.integrate import quad
 
 tilt = 0.408407044966673121 # Inclinación del eje (rad)
 t0   = 3.15576e7  # Período de traslación (días)
-#S    = 1361.0       # Constante Solar (W/m²)
-S    = 1370.0       # Constante Solar (W/m²)
+S    = 1361.0       # Constante Solar (W/m²)
 
 
 ###############

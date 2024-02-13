@@ -139,5 +139,5 @@ axs[1].legend(lines, [line.get_label() for line in lines], loc='upper left')
 
 axs[1].grid()
 axs[1].minorticks_on()
-plt.savefig('doscajas_MEP_results.pdf')
+plt.savefig('img/doscajas_MEP_results.pdf')
 plt.show()

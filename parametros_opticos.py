@@ -1,6 +1,8 @@
 # Determinación de los parámetros ópticos A y B de
 # la atmósfera a partir de un ajuste lineal de los
 # datos de NCEP Reanalysis.
+# Basado en "The Climate Laboratory" Cap. 20. de Brian E. J. Rose
+# https://brian-rose.github.io/ClimateLaboratoryBook/courseware/one-dim-ebm.html
 
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -23,10 +25,8 @@ Ts_ncep_anual = ncep_Ts.skt.mean(dim=('lon','time'))
 # Dataset de radiación en TOA. Se descargan manualmente del mismo sitio.
 # Asegurarse que los datos sean del mismo período y resolución temporal.
 ncep_ulwrf = xr.open_dataset("data/ulwrf.ntat.mon.ltm.1991-2020.nc")
-#ncep_dswrf = xr.open_dataset("data/dswrf.ntat.mon.ltm.1991-2020.nc")
-#ncep_uswrf = xr.open_dataset("data/uswrf.ntat.mon.ltm.1991-2020.nc")
 LW_ncep_anual = ncep_ulwrf.ulwrf.mean(dim=('lon','time'))
-#SWR_ncep_anual = (ncep_dswrf.dswrf - ncep_uswrf.uswrf).mean(dim=('lon','time'))
+
 
 # Realizamos la regresión lineal para hallar el mejor ajuste
 pendiente, ordenada, r_val, p_val, std_err = linregress(Ts_ncep_anual, LW_ncep_anual)
@@ -53,11 +53,11 @@ plt.rc('ytick', labelsize=14)
 fig, ax1 = plt.subplots(figsize=(8, 6))
 ax1.plot(Ts_ncep_anual, LW_ncep_anual, 'o', label='Datos de NCEP Reanalysis 1991-2020')
 ax1.plot(Ts_ncep_anual, ordenada + pendiente * Ts_ncep_anual, 'k--', label='mejor ajuste')
-ax1.plot(Ts_ncep_anual, A + B * Ts_ncep_anual, 'r--', label='ajuste para $-10 \leq T \leq 30$ ºC')
+ax1.plot(Ts_ncep_anual, A + B * Ts_ncep_anual, 'r--', label='ajuste para $-10 \leq T \leq 30$ $^\circ$C')
 
-ax1.set_xlabel('Temperatura de la superficie (ºC)', fontsize=16)
-ax1.set_ylabel('$LW$ en TOA (W m$^{-2}$)', fontsize=16)
+ax1.set_xlabel('Temperatura de la superficie [$^\circ$C]', fontsize=16)
+ax1.set_ylabel('$LW$ en TOA [W m$^{-2}$]', fontsize=16)
 ax1.legend(loc='upper left', fontsize=10)
 ax1.grid()
-
+plt.savefig("img/ajusteAyB.pdf")
 plt.show()

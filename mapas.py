@@ -1,11 +1,19 @@
+"""
+Función para construir mapas a partir de campos de valores del clima.
+     Input: campo, paleta de colores
+     El campo debe ser un xarray 2D (ej: temperaturas, albedo, etc.)
+     La paleta de colores es una de estas: https://matplotlib.org/stable/users/explain/colors/colormaps.html
+Además grafica el promedio zonal en un gráfico a la derecha del mapa.
+
+Adaptado de "The Climate Laboratory" de Brian E. J. Rose
+https://brian-rose.github.io/ClimateLaboratoryBook/courseware/transient-cesm.html
+"""
+
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.util import add_cyclic_point
 
 def make_map(field, colores=plt.cm.viridis):
-    '''input field should be a 2D xarray.DataArray on a lat/lon grid.
-        Make a filled contour plot of the field, and a line plot of the zonal mean
-    '''
     longitudes = field.coords['lon']
     lon_idx = field.dims.index('lon')
     wrap_field, wrap_lon = add_cyclic_point(field.values, coord=longitudes, axis=lon_idx)

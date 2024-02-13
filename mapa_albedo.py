@@ -1,3 +1,12 @@
+"""
+Este script calcula el albedo a partir de los datos de radiación incidente y reflejada de CERES.
+También infiere temperaturas a partir de la radiación reflejada, las muestra en un mapa y las compara con otras distribuciones de temperatura que se ingresan por archivo de texto.
+
+Autor: Carlos Silva
+csilva@fceia.unr.edu.ar
+Febrero 2024
+"""
+
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +35,7 @@ plt.grid()
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("SWR [W/m²]", fontsize=16)
 plt.tight_layout()
-plt.savefig("SW_neto.pdf")
+plt.savefig("img/SW_neto.pdf")
 plt.show()
 
 albedo = outsw/incoming
@@ -79,11 +88,15 @@ plt.tight_layout()
 axes[1].set_xlabel('Albedo', fontsize=16)
 axes[1].set_ylabel('Latitud [$^\circ$]', fontsize=16)
 
-plt.savefig('albedo.png', dpi=300)
-
-
+plt.savefig('img/albedo.png', dpi=300)
 plt.show()
 
+"""
+-------------------------------------------
+Cálculo de temperaturas inferidas a partir
+de la radiación LW emitida al espacio.
+-------------------------------------------
+"""
 
 emitedlw = ceresmapa.toa_lw_all_mon.mean(dim='time')
 
@@ -135,7 +148,7 @@ plt.legend(fontsize=10)
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
 plt.tight_layout()
-plt.savefig("temperaturas_comp_CERES.pdf")
+plt.savefig("img/temperaturas_comp_CERES.pdf")
 plt.show()
 
 
@@ -153,5 +166,5 @@ plt.minorticks_on()
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Discrepancia relativa [\%]", fontsize=16)
 plt.tight_layout()
-plt.savefig("discrepanciarelativa.pdf")
+plt.savefig("img/discrepanciarelativa.pdf")
 plt.show()

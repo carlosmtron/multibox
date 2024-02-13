@@ -150,7 +150,7 @@ plt.grid(True, color='0.95')
 # plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
-plt.savefig("temperaturas.pdf")
+plt.savefig("img/temperaturas.pdf")
 plt.show()
 
 plt.plot(dcajas[:, 0], np.abs(Zfin), marker="o", ls="", markersize=4)
@@ -161,7 +161,7 @@ plt.grid(True, color='0.95')
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$|\zeta|\cdot\mathcal{A}$ [W]", fontsize=16)
 plt.tight_layout()
-plt.savefig("convergencias.pdf")
+plt.savefig("img/convergencias.pdf")
 plt.show()
 
 
@@ -184,7 +184,7 @@ plt.legend(fontsize=10)
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$LW$ y $SW$ en TOA [W/m$^2$]", fontsize=16)
 plt.tight_layout()
-plt.savefig("comp_LWySW.pdf")
+plt.savefig("img/comp_LWySW.pdf")
 plt.show()
 
 
@@ -209,7 +209,7 @@ plt.legend(fontsize=10)
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("Temperatura [ºC]", fontsize=16)
 plt.tight_layout()
-plt.savefig("temperaturas_comp.pdf")
+plt.savefig("img/temperaturas_comp.pdf")
 plt.show()
 
 
@@ -271,7 +271,7 @@ plt.grid()
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)
 plt.ylabel("$\mathcal{H}$ [PW]", fontsize=16)
 plt.tight_layout()
-plt.savefig("flujo_meridional.pdf")
+plt.savefig("img/flujo_meridional.pdf")
 plt.show()
 
 
