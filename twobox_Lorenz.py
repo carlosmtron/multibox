@@ -110,17 +110,17 @@ plt.xscale('log')
 plt.xlabel('$k\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
 
 # Bandas de Tº observada
-tmax_ecuador = 303*np.ones(num_k)
-tmin_ecuador = 293*np.ones(num_k)
-tmax_polos = 291*np.ones(num_k)
-tmin_polos = 271*np.ones(num_k)
+# tmax_ecuador = 303*np.ones(num_k)
+# tmin_ecuador = 293*np.ones(num_k)
+# tmax_polos = 291*np.ones(num_k)
+# tmin_polos = 271*np.ones(num_k)
 
 axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1],
             label="$T_{\infty,A}$")
 axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,2],
             label="$T_{\infty,B}$")
-axs[0].fill_between(temp_estacionaria[:,0], tmin_ecuador, tmax_ecuador, alpha=0.4)
-axs[0].fill_between(temp_estacionaria[:,0], tmin_polos, tmax_polos, alpha=0.4)
+# axs[0].fill_between(temp_estacionaria[:,0], tmin_ecuador, tmax_ecuador, alpha=0.4)
+# axs[0].fill_between(temp_estacionaria[:,0], tmin_polos, tmax_polos, alpha=0.4)
 axs[0].set_ylabel('$T_\infty\ [\mbox{K}]$')
 axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310, 320, 330])
 axs[0].grid()
