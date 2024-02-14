@@ -20,11 +20,11 @@ from scipy.integrate import odeint
 plt.rcParams['text.usetex'] = True
 
 # Constantes del problema
-SWA = 305.71
-SWB = 177.38
+SWA = 300
+SWB = 170
 C = 2e+08
-A_CELSIUS = 208.0
-BETA = 1.9
+A_CELSIUS = 204.0
+BETA = 2.17
 ALPHA = A_CELSIUS-BETA*273.15
 GAMMA1 = (SWA-ALPHA)/C
 GAMMA2 = (SWB-ALPHA)/C
@@ -133,11 +133,12 @@ axs[1].set_ylabel('$\mathcal{P}/\mathcal{A}\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
 secundario = axs[1].twinx()
 secundario.plot(sigmas[:,0],sigmas[:,1], "tab:red", label="$F_{AB}$")
 secundario.set_ylabel('$F_{AB}\ [\mbox{W m}^{-2}]$')
-secundario.set_ylim([0, 70])
+secundario.set_ylim([0, 68])
 lines = axs[1].get_lines() + secundario.get_lines()
 axs[1].legend(lines, [line.get_label() for line in lines], loc='upper left')
 
 axs[1].grid()
 axs[1].minorticks_on()
+secundario.minorticks_on()
 plt.savefig('img/doscajas_MEP_results.pdf')
 plt.show()

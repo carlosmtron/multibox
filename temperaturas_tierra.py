@@ -171,6 +171,7 @@ def promedio_zonal(temperaturas):
   da_area = area_grid(temperaturas['lat'], temperaturas['lon'])
   # Área total
   total_area = da_area.sum(['lat','lon'])
+  print("AREA TOTAL → ", total_area)
   # temperaturas pesadas por el área de cada celda
   temp_weighted = (temperaturas*da_area)/total_area
   # Promedio final
@@ -252,12 +253,10 @@ VALORES DE SW PARA TRES CAJAS
 """
 
 SWA_data = mascara(SWR_anual, -19.47, 19.47)
-
 casquete_sur = mascara(SWR_anual, -90, -19.47)
 casquete_norte = mascara(SWR_anual, 19.47, 90)
 
 SWa = promedio_zonal(SWA_data)
-# SWb = 0.5*(promedio_zonal(casquete_sur) + promedio_zonal(casquete_norte))
 SWsur = promedio_zonal(casquete_sur)
 SWnorte = promedio_zonal(casquete_norte)
 print("\n VALORES SW TRES CAJAS")
@@ -266,3 +265,63 @@ print("SWA = ", SWa.values, "W/m²")
 # print("SWB = ", SWb.values, "W/m²")
 print("SW Sur = ", SWsur.values, "W/m²")
 print("SW Norte = ", SWnorte.values, "W/m²")
+
+
+################################################
+################################################
+####            AREA DE PRUEBAS             ####
+################################################
+################################################
+
+def area(latgrados, ncajas):
+    # lat es la latitud central de la zona.
+    # ncajas es la cantidad de celdas del problema.
+    lat = np.deg2rad(latgrados)
+    ancho = np.pi / ncajas
+    phi1 = lat - ancho/2
+    phi2 = lat + ancho/2
+    return 2*np.pi * np.abs(np.sin(phi2) - np.sin(phi1))
+    
+
+datosrad = np.loadtxt("data/elementos_SW.dat")
+ncajas = datosrad.shape[0]
+
+contador=0
+
+for juju in range(ncajas):
+  if (datosrad[juju, 0]>-30) & (datosrad[juju, 0]<30):
+    contador+=1
+
+# RT = 6.37E06
+valoresSWA = np.zeros(contador)
+datosareaA = np.zeros(contador)
+contadito = 0
+valoresSWB = np.zeros(ncajas - contador)
+datosareaB = np.zeros(ncajas - contador)
+contaditoB = 0
+
+
+for juju in range(ncajas):
+  if (datosrad[juju, 0]>-30) & (datosrad[juju, 0]<30):
+    valoresSWA[contadito] = datosrad[juju,2]
+    datosareaA[contadito] = datosrad[juju,3]
+    contadito += 1
+  else:
+    valoresSWB[contaditoB] = datosrad[juju,2]
+    datosareaB[contaditoB] = datosrad[juju,3]
+    contaditoB += 1
+
+#datosareaA = datosareaA
+totalA = datosareaA.sum()
+pesadosA = valoresSW*datosareaA/totalA
+
+print("Método Silva")
+print("---------------")
+print("SWA = ", pesadosA.sum(), "W/m²")
+
+
+totalB = datosareaB.sum()
+pesadosB = valoresSW*datosareaB/totalB
+print("---------------")
+print("SWA = ", datosareaB.sum(), "W/m²")
+
