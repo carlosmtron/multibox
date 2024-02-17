@@ -20,11 +20,11 @@ from scipy.integrate import odeint
 plt.rcParams['text.usetex'] = True
 
 # Constantes del problema
-SWA = 300
-SWB = 170
+SWA = 305.70
+SWB = 177.29
 C = 2e+08
-A_CELSIUS = 204.0
-BETA = 2.17
+A_CELSIUS = 207.42
+BETA = 1.93
 ALPHA = A_CELSIUS-BETA*273.15
 GAMMA1 = (SWA-ALPHA)/C
 GAMMA2 = (SWB-ALPHA)/C
@@ -119,10 +119,12 @@ axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,1],
             label="$T_{\infty,A}$")
 axs[0].plot(temp_estacionaria[:,0],temp_estacionaria[:,2],
             label="$T_{\infty,B}$")
+axs[0].axhline(298.49, color="tab:blue", linestyle = "dashed", alpha=0.3, label="$\overline{T}_A$ NCEP")
+axs[0].axhline(277.11, color="tab:orange", linestyle = "dashed", alpha=0.3, label="$\overline{T}_B$ NCEP")
 # axs[0].fill_between(temp_estacionaria[:,0], tmin_ecuador, tmax_ecuador, alpha=0.4)
 # axs[0].fill_between(temp_estacionaria[:,0], tmin_polos, tmax_polos, alpha=0.4)
 axs[0].set_ylabel('$T_\infty\ [\mbox{K}]$')
-axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310, 320, 330])
+axs[0].set_yticks([250, 260, 270, 280, 290, 300, 310, 320])
 axs[0].grid()
 axs[0].minorticks_on()
 axs[0].legend()
