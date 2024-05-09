@@ -16,6 +16,7 @@ import numpy as np
 # Importamos los datos de temperatura
 Tsdata_ncep = xr.open_dataset('data/skt.sfc.mon.ltm.1991-2020.nc')
 ncep_Ts = Tsdata_ncep
+# ncep_Ts['skt'] = ncep_Ts['skt'] - 273.15 # Descomentar si los datos están en K
 lat_ncep = ncep_Ts.lat; lon_ncep = ncep_Ts.lon
 print(ncep_Ts)
 
@@ -95,19 +96,38 @@ def pesaje_areas(zona):
 
 
 promedio_sur = pesaje_areas(zona_sur.skt).sum().values
-print("\nTemperatura promedio zona sur: ", promedio_sur+273.15, " K")
+print("\nTemperatura promedio zona sur: %4.2f K" % (promedio_sur+273.15))
 
 promedio_norte = pesaje_areas(zona_norte.skt).sum().values
-print("\nTemperatura promedio zona norte: ", promedio_norte+273.15, " K")
+print("\nTemperatura promedio zona norte: %4.2f K" % (promedio_norte+273.15))
 
 promedio_polar = pesaje_areas(zona_polar.skt).sum().values
-print("\nTemperatura promedio zona polar: ", promedio_polar+273.15, " K")
+print("\nTemperatura promedio zona polar: %4.2f K" % (promedio_polar+273.15))
 
 promedio_ecuador = pesaje_areas(zona_ecuat.skt).sum().values
-print("\nTemperatura promedio zona ecuatorial: ", promedio_ecuador+273.15, " K")
+print("\nTemperatura promedio zona ecuatorial: %4.2f K" % (promedio_ecuador+273.15))
 
 promedio_global = pesaje_areas(ncep_Ts.skt).sum().values
-print("\nTemperatura promedio global: ", promedio_global+273.15, " K")
+print("\nTemperatura promedio global: %4.2f K" % (promedio_global+273.15))
+
+# Cálculo de los desvíos estándar ponderados
+# a priori, just for fun...
+def desvios_ponderados(zona):
+  latitudes = zona.lat
+  ancho = np.pi/180.0
+  areas = np.cos(np.deg2rad(latitudes))*ancho
+  pesos = (areas/areas.sum()).values
+  datos = zona.mean(dim=('lon','time')).values
+  desvio = np.sqrt(np.cov(datos, aweights=pesos))
+  return desvio
+
+desvpolar = desvios_ponderados(zona_polar.skt)
+print("Desvio temp. polares %.2f K" % desvpolar)
+print("Intervalo: ( %.1f , %.1f ) ºC" % (promedio_polar-desvpolar, promedio_polar+desvpolar) )
+desvecuat = desvios_ponderados(zona_ecuat.skt)
+print("Desvio temp. ecuatoriales %.2f K" % desvecuat)
+print("Intervalo: ( %.1f , %.1f ) ºC" % (promedio_ecuador-desvecuat, promedio_ecuador+desvecuat) )
+print()
 
 ######################
 #### RADIACIÓN SW ####
@@ -136,7 +156,7 @@ print("-----------------------------")
 SWA = pesaje_areas_nt(SWA_data).sum().values
 print("SWA = ", SWA, " W/m²")
 SWB = pesaje_areas_nt(SWB_data).sum().values
-print("SWA = ", SWB, " W/m²")
+print("SWB = ", SWB, " W/m²")
 
 
 SW0_data = mascara(SWR_anual, -90.00, -19.47)

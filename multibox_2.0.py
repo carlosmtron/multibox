@@ -195,15 +195,20 @@ plt.show()
 
 ncep_Ts = xr.open_dataset('data/skt.sfc.mon.ltm.1991-2020.nc')
 T_obs = ncep_Ts.skt.mean(dim=('lon', 'time'))
+T_desvest = ncep_Ts.skt.std(dim=('lon','time'))
 
 T_fuku = np.loadtxt("data/MEP-Fukumura.dat")
 
 
 plt.plot(dcajas[:, 0], solucion.x-273.15, marker="o", ls="", label="MEP", markersize=4)
 plt.plot(T_obs.lat, T_obs.values, label="NCEP Reanalysis 1991-2020")
+plt.fill_between(T_obs.lat, (T_obs-T_desvest).values, (T_obs+T_desvest).values, color="tab:orange", alpha=0.15)
 plt.plot(T_fuku[:,0], T_fuku[:,1]-273.15, label="MEP Fukumura y Ozawa (2014)",  ls="--", markersize=4)
 plt.xticks(ticks)
-plt.grid(True, color='0.95')
+plt.grid(which='major')
+plt.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+plt.minorticks_on()
+
 plt.legend(fontsize=10)
 # plt.title("Distribución de temperaturas")
 plt.xlabel("Latitud [$^\circ$]", fontsize=16)

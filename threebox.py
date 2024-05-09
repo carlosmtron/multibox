@@ -9,8 +9,8 @@ import SWA
 # Constantes del problema #
 ###########################
 
-acels = 203.3          # Parámetro optico a en W/m²ºC
-b     = 1.87           # Parámetro óptico b
+acels = 207.42          # Parámetro optico a en W/m²ºC
+b     = 1.93           # Parámetro óptico b
 a     = acels-b*273.15 # Parámetro óptico a en W/m²K 
 area  = 1              # Área de cada sector
 
@@ -20,36 +20,35 @@ def LWA(T):
     return a+b*T
 
 # Voy a cargar manualmente latitud y albedo en un array. Cada caja está en una fila.
-albedo_vs_latitud = np.array(([-56.719, 0.4], [0, 0.2], [56.719, 0.41]))
+albedo_vs_latitud = np.array(([-56.719, 0.428], [0, 0.222], [56.719, 0.398]))
 nboxes = albedo_vs_latitud.shape[0]  # Número de cajas
 print("Se han detectado ", nboxes, " cajas\n")
 
+# El albedo no lo voy a usar en este problema. Lo dejo porque me sirve para multibox.
+# La latitud central tampoco me importa en verdad.
 
 # Creo la matriz 'dcajas', de 'nboxes' filas, cuyas columnas son:
 # lat, SWA, LWA, temp
-
 
 
 dcajas = np.zeros((nboxes,4))
 dseta = np.zeros((nboxes))    # Vector de convergencias
 
 divisiones = np.arange(0,nboxes)
-
+dcajas[:,0] = albedo_vs_latitud[:,0]
+dcajas[:,1] = [203.984, 314.096, 208.916]
 # Defino las temperaturas iniciales. Al ser tres cajas lo puedo hacer manualmente.
 dcajas[:,3] = [300, 300, 300]  # Kelvin
+dcajas[:,2] = LWA(dcajas[:,3])
 
 
 print("Latitud Media \t Albedo \t SWA [W/m²]")
 
-for ii in divisiones:
-    lat = albedo_vs_latitud[ii,0]  # Se los paso en grados
-    albedo = albedo_vs_latitud[ii,1]
-    dcajas[ii,:3] = [lat, SWA.SWA_calc(lat, albedo), LWA(dcajas[ii,3])]
-    
+for ii in divisiones:   
     print(f"{lat:^+13.2f} \t {albedo:^6.2f} \t {dcajas[ii,1]:^10.4f}")
 
-    
-    
+
+
 def calculo_dseta(vtemp):
     for i in divisiones:
         dseta[i] = (LWA(vtemp[i]) - dcajas[i,1])*area
@@ -115,3 +114,32 @@ print("\nTemperaturas en ºC:")
 print(solucion.x-273.15)
 
 print("\nTemp. promedio:", np.average(solucion.x)-273.15, "ºC")
+
+
+####################################
+##       Solución analítica       ##
+####################################
+
+SW = dcajas[:,1]
+SWtot = SW.sum()
+sumita = (np.sqrt(SW-a)).sum()
+Tf = np.zeros(3)
+for i in range(3):
+    Tf[i] = (np.sqrt(SW[i]-a)*(SWtot-3*a))/(sumita*b)
+
+print("\nTemperaturas analíticas")
+print("-------------------------------")
+print(Tf, "[K]")
+print(Tf-273.15, "[°C]")
+
+zeta = -SW + a + b * Tf
+print("\nConvergencias meridionales")
+print("-------------------------------")
+print(zeta, "[W/m²]")
+
+F = np.zeros(2)
+F[0] = -zeta[0]
+F[1] = -zeta[1] + F[0]
+print("\nFlujos meridionales")
+print("-------------------------------")
+print(F, "[W/m²]")

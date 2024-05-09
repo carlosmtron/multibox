@@ -18,10 +18,12 @@ import numpy as np
 from scipy.integrate import odeint
 
 plt.rcParams['text.usetex'] = True
+plt.rcParams["grid.color"]= "#DDDDDD"
+plt.rcParams["grid.linewidth"] = 0.8
 
 # Constantes del problema
-SWA = 305.70
-SWB = 177.29
+SWA = 305.7
+SWB = 177.4
 C = 2e+08
 A_CELSIUS = 207.42
 BETA = 1.93
@@ -107,6 +109,7 @@ print("Tb [K]:", temperatura_b, "=", temperatura_b-273.15, "[ºC]")
 fig, axs = plt.subplots(2, sharex=True, sharey=False)
 
 plt.xscale('log')
+plt.xticks([1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5])
 plt.xlabel('$k\ [\mbox{W m}^{-2}\mbox{K}^{-1}]$')
 
 # Bandas de Tº observada
