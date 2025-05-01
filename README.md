@@ -21,7 +21,7 @@ These models were developed as part of a thesis research project and offer tools
 
 ## Requirements
 
-- Python 3.x  
+- [`Python 3.x`](https://python.org)  
 - [`numpy`](https://numpy.org)  
 - [`scipy`](https://scipy.org)  
 - [`matplotlib`](https://matplotlib.org)  
